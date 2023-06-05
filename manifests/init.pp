@@ -56,8 +56,6 @@ class nvm (
   }
 
   if $manage_dependencies {
-    include git
-
     $nvm_install_require = [Package['git', 'wget', 'make']]
     ensure_packages(['wget', 'make'])
   }
