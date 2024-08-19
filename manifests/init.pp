@@ -48,7 +48,7 @@ class nvm (
   if $install_node {
     assert_type(String[1], $install_node)
   }
-  assert_type(String[1], $node_instances)
+  assert_type(Hash, $node_instances)
 
   Exec {
     path => '/bin:/sbin:/usr/bin:/usr/sbin',
