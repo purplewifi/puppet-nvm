@@ -12,8 +12,7 @@ class nvm (
   $refetch             = $nvm::params::refetch,
   $install_node        = $nvm::params::install_node,
   $node_instances      = $nvm::params::node_instances,
-) inherits ::nvm::params {
-
+) inherits nvm::params {
   if $home == undef and $user == 'root' {
     $final_home = '/root'
   }
@@ -38,18 +37,18 @@ class nvm (
     $final_profile_path = $profile_path
   }
 
-  validate_string($user)
-  validate_string($final_home)
-  validate_string($final_nvm_dir)
-  validate_string($final_profile_path)
-  validate_string($version)
-  validate_bool($manage_user)
-  validate_bool($manage_dependencies)
-  validate_bool($manage_profile)
+  assert_type(String[1], $user)
+  assert_type(String[1], $final_home)
+  assert_type(String[1], $final_nvm_dir)
+  assert_type(String[1], $final_profile_path)
+  assert_type(String[1], $version)
+  assert_type(Boolean, $manage_user)
+  assert_type(Boolean, $manage_dependencies)
+  assert_type(Boolean, $manage_profile)
   if $install_node {
-    validate_string($install_node)
+    assert_type(String[1], $install_node)
   }
-  validate_hash($node_instances)
+  assert_type(String[1], $node_instances)
 
   Exec {
     path => '/bin:/sbin:/usr/bin:/usr/sbin',
@@ -68,7 +67,7 @@ class nvm (
       ensure     => present,
       home       => $final_home,
       managehome => true,
-      before     => Class['nvm::install']
+      before     => Class['nvm::install'],
     }
   }
 
@@ -84,17 +83,17 @@ class nvm (
 
   if $manage_profile {
     file { "ensure ${final_profile_path}":
-      ensure => 'present',
+      ensure => 'file',
       path   => $final_profile_path,
       owner  => $user,
-    } ->
+    }
 
-    file_line { 'add NVM_DIR to profile file':
+    -> file_line { 'add NVM_DIR to profile file':
       path => $final_profile_path,
       line => "export NVM_DIR=${final_nvm_dir}",
-    } ->
+    }
 
-    file_line { 'add . ~/.nvm/nvm.sh to profile file':
+    -> file_line { 'add . ~/.nvm/nvm.sh to profile file':
       path => $final_profile_path,
       line => "[ -s \"\$NVM_DIR/nvm.sh\" ] && . \"\$NVM_DIR/nvm.sh\"  # This loads nvm",
     }
@@ -102,9 +101,9 @@ class nvm (
 
   if $install_node {
     $final_node_instances = merge($node_instances, {
-      "${install_node}" => {
-        set_default => true,
-      },
+        "${install_node}" => {
+          set_default => true,
+        },
     })
   }
   else {
@@ -112,8 +111,7 @@ class nvm (
   }
 
   create_resources(::nvm::node::install, $final_node_instances, {
-    user        => $user,
-    nvm_dir     => $final_nvm_dir,
+      user        => $user,
+      nvm_dir     => $final_nvm_dir,
   })
-
 }
